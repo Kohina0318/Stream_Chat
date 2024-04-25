@@ -14,7 +14,6 @@ export default function ChatScreen() {
   
 
   const onSelect = (chanel) => {
-    console.log("hi")
     setCurrentChannel(chanel);
     navigation.navigate("ChatRoom");
   };

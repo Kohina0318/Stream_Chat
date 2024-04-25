@@ -12,7 +12,6 @@ const ChatContextProvider = ({children}) => {
   const client = StreamChat.getInstance('3jfj9tbccxjm');
   useEffect(() => {
     const initChat = async () => {
-      // if (!chatClient) {
         await client.connectUser(
           {
             id: 'john',
@@ -24,13 +23,12 @@ const ChatContextProvider = ({children}) => {
 
         setChatClient(client);
 
-        // const globalChannel = client.channel("livestream", "global", {
-        //   name: "notJust.dev",
-        // });
+        const globalChannel = client.channel("livestream", "global", {
+          name: "notJust.dev",
+        });
   
-        // await globalChannel.watch();
+        await globalChannel.watch();
 
-      // }
     };
   
     initChat();

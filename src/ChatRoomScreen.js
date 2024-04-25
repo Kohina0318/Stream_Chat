@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useContext } from "react";
 import { View, Text } from "react-native";
 import { ChatContext } from './ChatContext';
 import { Channel, MessageList, MessageInput } from "stream-chat-react-native";
