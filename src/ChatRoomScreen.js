@@ -13,6 +13,7 @@ export default function ChatRoomScreen() {
   }, [currentChannel?.data?.name]);
 
   return (
+    
     <Channel channel={currentChannel}>
       <MessageList />
       <MessageInput />

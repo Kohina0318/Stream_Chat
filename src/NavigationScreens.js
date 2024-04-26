@@ -3,6 +3,7 @@ import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import ChatScreen from './ChatScreen';
 import ChatRoomScreen from './ChatRoomScreen';
+import UsersScreen from './UsersScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -29,6 +30,10 @@ export default function NavigationScreens() {
           name="ChatRoom"
           component={ChatRoomScreen}
         />
+        <Stack.Screen
+          name="Users"
+          component={UsersScreen}       
+           />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -6,50 +6,61 @@ import {OverlayProvider, Chat} from 'stream-chat-react-native';
 const ChatContext = createContext();
 
 const ChatContextProvider = ({children}) => {
-  const [chatClient, setChatClient] = useState();
+  const [chatClient, setChatClient] = useState(() =>
+    StreamChat.getInstance('3jfj9tbccxjm'),
+  );
   const [currentChannel, setCurrentChannel] = useState();
 
-  const client = StreamChat.getInstance('3jfj9tbccxjm');
+
   useEffect(() => {
     const initChat = async () => {
-        await client.connectUser(
-          {
-            id: 'john',
-            name: 'John Doe',
-            image: 'https://getstream.io/random_svg/?name=John',
-          },
-          client.devToken('john')
-        );
+      await chatClient.connectUser(
+        {
+          id: 'john',
+          name: 'John Doe',
+          image: 'https://getstream.io/random_svg/?name=John',
+        },
+        chatClient.devToken('john'),
+      );
 
-        setChatClient(client);
+      const globalChannel = chatClient.channel('livestream', 'global', {
+        name: 'notJust.dev',
+      });
 
-        const globalChannel = client.channel("livestream", "global", {
-          name: "notJust.dev",
-        });
-  
-        await globalChannel.watch();
-
+      await globalChannel.watch();
     };
-  
+
     initChat();
-  
+
     return () => {
       if (chatClient) {
         chatClient.disconnectUser();
       }
     };
-  }, []);
+  }, [chatClient]);
 
+  const startDMChatRoom = async chatWithUser => {
+      if (!chatClient) {
+        return;
+      }
+      const newChannel = chatClient.channel('messaging', {
+        members: [chatClient.userID, chatWithUser.name],
+      });
+      await newChannel.watch();
+      setCurrentChannel(newChannel);
+      return;
+  };
 
   const value = {
     chatClient,
     currentChannel,
     setCurrentChannel,
+    startDMChatRoom,
   };
 
   return (
     <OverlayProvider>
-      <Chat client={client}>
+      <Chat client={chatClient}>
         <ChatContext.Provider value={value}>{children}</ChatContext.Provider>
       </Chat>
     </OverlayProvider>
