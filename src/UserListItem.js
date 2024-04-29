@@ -10,14 +10,14 @@ import {ChatContext} from './ChatContext';
 import {useNavigation} from '@react-navigation/native';
 
 const UserListItem = ({user}) => {
-  const {startDMChatRoom, setCurrentChannel, chatClient} =
-    useContext(ChatContext);
+  // const {startDMChatRoom, setCurrentChannel, chatClient} =
+  //   useContext(ChatContext);
   const navigation = useNavigation();
 
   const handle = async user => {
-     await startDMChatRoom(user);
+    //  await startDMChatRoom(user);
      console.log("handle..")
-    navigation.navigate('ChatRoom');
+    // navigation.navigate('ChatRoom');
   };
 
   return (
