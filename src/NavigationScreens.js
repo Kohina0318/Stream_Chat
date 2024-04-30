@@ -23,21 +23,37 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import {useAppContext} from './AppContext';
+import NewMesgScreen from './NewMesgScreen';
 
 const Data = [
   {
-    id: 1,
+    id: 'kohina',
     name: 'kohina',
     img: 'https://img.freepik.com/premium-vector/business-global-economy_24877-41082.jpg',
   },
   {
-    id: 2,
+    id: 'Sukku',
     name: 'Sukku',
     img: 'https://img.freepik.com/premium-vector/business-global-economy_24877-41082.jpg',
   },
   {
-    id: 3,
+    id: 'Shubh',
     name: 'Shubh',
+    img: 'https://img.freepik.com/premium-vector/business-global-economy_24877-41082.jpg',
+  },
+  {
+    id: 'Hubb',
+    name: 'Hubb',
+    img: 'https://img.freepik.com/premium-vector/business-global-economy_24877-41082.jpg',
+  },
+  {
+    id: 'Chhaya',
+    name: 'Chhaya',
+    img: 'https://img.freepik.com/premium-vector/business-global-economy_24877-41082.jpg',
+  },
+  {
+    id: 'Pintu',
+    name: 'Pintu',
     img: 'https://img.freepik.com/premium-vector/business-global-economy_24877-41082.jpg',
   },
 ];
@@ -59,9 +75,9 @@ const chatClient = StreamChat.getInstance(chatApiKey);
 export default function NavigationScreens() {
   const {clientIsReady} = useChatClient();
 
-  if (!clientIsReady) {
-    return <Text>Loading chat ...</Text>;
-  }
+  // if (!clientIsReady) {
+  //   return <Text>Loading chat ...</Text>;
+  // }
 
   const ChannelListScreen = props => {
     const {setChannel} = useAppContext();
@@ -125,9 +141,29 @@ export default function NavigationScreens() {
   };
 
   const UsersScreen = props => {
+    const {setChannel} = useAppContext();
+
     const UserListItem = ({user}) => {
       const handle = async user => {
-        console.log('handle..');
+        try {
+          console.log(
+            'chatClient.user.id, user.id..',
+            chatClient.user.id,
+            user.id,
+          );
+          const newChannel = chatClient.channel('messaging', user.id, {
+            name: user.id,
+            image: user.img,
+            members: [chatClient.user.id, user.id],
+          });
+          await newChannel.create();
+
+          setChannel(newChannel);
+
+          props.navigation.navigate('ChannelScreen');
+        } catch (e) {
+          console.log('Error....', e);
+        }
       };
 
       return (
@@ -155,10 +191,11 @@ export default function NavigationScreens() {
               name="ChannelListScreen"
               component={ChannelListScreen}
             />
-            <Stack.Screen name="ChannelScreen" component={ChannelScreen} />
+            <Stack.Screen name="ChannelScreen" component={ChannelScreen}  />
             <Stack.Screen name="ThreadScreen" component={ThreadScreen} />
 
             <Stack.Screen name="Users" component={UsersScreen} />
+            <Stack.Screen name="NewMesgScreen" component={NewMesgScreen} />
 
             {/* <Stack.Screen
           name="Chat"
