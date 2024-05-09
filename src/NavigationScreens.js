@@ -1,9 +1,10 @@
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState, useRef} from 'react';
 import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import ChatScreen from './ChatScreen';
 import ChatRoomScreen from './ChatRoomScreen';
 import {useChatClient} from './useChatClient';
+import { zegoAppSign, zegoAppId } from './ChatConfig';
 import {
   Chat,
   OverlayProvider,
@@ -12,8 +13,10 @@ import {
   MessageList,
   MessageInput,
   Thread,
+  TouchableWithoutFeedback,
 } from 'stream-chat-react-native';
 import {StreamChat} from 'stream-chat';
+import {VideoAudioHeader} from './VideoAudioCall/VideoAudioHeader';
 import {chatApiKey, chatUserId} from './ChatConfig';
 import {
   FlatList,
@@ -24,6 +27,17 @@ import {
 } from 'react-native';
 import {useAppContext} from './AppContext';
 import NewMesgScreen from './NewMesgScreen';
+import {Dimensions} from 'react-native';
+import {View} from 'react-native';
+import ZegoUIKitPrebuiltCallService, {
+  ZegoCallInvitationDialog,
+  ZegoUIKitPrebuiltCallWaitingScreen,
+  ZegoUIKitPrebuiltCallInCallScreen,
+  ZegoSendCallInvitationButton,
+} from '@zegocloud/zego-uikit-prebuilt-call-rn';
+import { getFirstInstallTime } from 'react-native-device-info'
+import * as ZIM from 'zego-zim-react-native';
+
 
 const Data = [
   {
@@ -72,6 +86,66 @@ const MyTheme = {
 const Stack = createNativeStackNavigator();
 const chatClient = StreamChat.getInstance(chatApiKey);
 
+
+export const onUserLogin = async (userID, userName,navigation, props) => {
+  console.log(1, zegoAppId, zegoAppSign, userID, userName);
+  
+  return ZegoUIKitPrebuiltCallService.init(
+    zegoAppId,
+    zegoAppSign,
+    userID,
+    userName,
+    [ZIM],
+    {
+      androidNotificationConfig: {
+        channelID: "ZegoUIKit",
+        channelName: "ZegoUIKit",
+    },
+      ringtoneConfig: { 
+        incomingCallFileName: 'zego_incoming.mp3',
+        outgoingCallFileName: 'zego_outgoing.mp3',
+      },
+      notifyWhenAppRunningInBackgroundOrQuit: true,
+      androidNotificationConfig: {
+        channelID: "ZegoUIKit" ,
+        channelName: "ZegoUIKit",
+    },
+      requireConfig: data => {
+        return {
+          onHangUp: duration => {
+            console.log(duration);
+            navigation.reset({
+              index: 0,
+              routes: [{name: 'ChannelScreen'}]
+            })
+          },
+          durationConfig: {
+            isVisible: true,
+            onDurationUpdate: duration => {
+              console.log(
+                '########CallWithInvitation onDurationUpdate',
+                duration,
+              );
+              if (duration === 10 * 60) {
+                ZegoUIKitPrebuiltCallService.hangUp();
+              }
+            },
+          },
+          // topMenuBarConfig: {
+          //   buttons: [ZegoMenuBarButtonName.minimizingButton],
+          // },
+          onWindowMinimized: () => {
+            console.log('[Demo]CallInvitation onWindowMinimized');
+            props.navigation.navigate('HomeScreen');
+          },
+          onWindowMaximized: () => {
+            console.log('[Demo]CallInvitation onWindowMaximized');
+            props.navigation.navigate('ZegoUIKitPrebuiltCallInCallScreen');
+          },
+        };
+      },
+    })}
+
 export default function NavigationScreens() {
   const {clientIsReady} = useChatClient();
 
@@ -96,7 +170,7 @@ export default function NavigationScreens() {
         <TouchableOpacity
           onPress={() => props.navigation.navigate('Users')}
           style={{alignItems: 'flex-end', padding: 5}}>
-          <Text>Send New Message</Text>
+          <Text style={{color: 'black'}}>Send New Message</Text>
         </TouchableOpacity>
         <ChannelList
           filters={filters}
@@ -112,21 +186,54 @@ export default function NavigationScreens() {
   };
 
   const ChannelScreen = props => {
+    const {width, height} = Dimensions.get('window');
     const {navigation} = props;
     const {channel, setThread} = useAppContext();
+    const [userID, setUserID] = useState('');
+    const [userName, setUserName] = useState('');
+    const [invitees, setInvitees] = useState([]);
+// console.log(channel);
+    useEffect(() => {
+      getFirstInstallTime().then(firstInstallTime => {
+        const id = String(firstInstallTime).slice(-5);
+        setUserID(id);
+        const name = 'user_' + id;
+        setUserName(name);
+      });
+    }, []);
+
+    useEffect(() => {
+      if (userID, userName) {
+        console.log('called onuser login', userID, userName);
+        onUserLogin(userID, userName, navigation);
+      }
+    }, [userID, userName]);
+
+    useEffect(() => {
+      if (channel) {
+        setInvitees([channel.id]);
+      }
+    }, [channel]);
 
     return (
-      <Channel channel={channel}>
-        <MessageList
-          onThreadSelect={message => {
-            if (channel?.id) {
-              setThread(message);
-              navigation.navigate('ThreadScreen');
-            }
-          }}
-        />
-        <MessageInput />
-      </Channel>
+      // <TouchableWithoutFeedback onPress={blankPressedHandle}>
+      <View style={[styles.channelScreenC, {width: width, height: height}]}>
+        <VideoAudioHeader navigation={props.navigation} userID={userID} userName={userName} />
+        <View style={styles.channelC}>
+          <Channel channel={channel}>
+            <MessageList
+              onThreadSelect={message => {
+                if (channel?.id) {
+                  setThread(message);
+                  navigation.navigate('ThreadScreen');
+                }
+              }}
+            />
+            <MessageInput />
+          </Channel>
+        </View>
+      </View>
+      // </TouchableWithoutFeedback>
     );
   };
 
@@ -186,16 +293,34 @@ export default function NavigationScreens() {
     <OverlayProvider>
       <Chat client={chatClient}>
         <NavigationContainer theme={MyTheme}>
+          <ZegoCallInvitationDialog />
           <Stack.Navigator>
             <Stack.Screen
               name="ChannelListScreen"
               component={ChannelListScreen}
+              options={{headerShown: false}}
             />
-            <Stack.Screen name="ChannelScreen" component={ChannelScreen}  />
+            <Stack.Screen
+              name="ChannelScreen"
+              component={ChannelScreen}
+              options={{headerShown: false}}
+            />
             <Stack.Screen name="ThreadScreen" component={ThreadScreen} />
 
             <Stack.Screen name="Users" component={UsersScreen} />
             <Stack.Screen name="NewMesgScreen" component={NewMesgScreen} />
+            <Stack.Screen
+              options={{headerShown: false}}
+              // DO NOT change the name
+              name="ZegoUIKitPrebuiltCallWaitingScreen"
+              component={ZegoUIKitPrebuiltCallWaitingScreen}
+            />
+            <Stack.Screen
+              options={{headerShown: false}}
+              // DO NOT change the name
+              name="ZegoUIKitPrebuiltCallInCallScreen"
+              component={ZegoUIKitPrebuiltCallInCallScreen}
+            />
 
             {/* <Stack.Screen
           name="Chat"
@@ -236,5 +361,11 @@ const styles = StyleSheet.create({
   name: {
     fontWeight: 'bold',
     marginLeft: 10,
+  },
+  channelScreenC: {
+    backgroundColor: 'rgba(216, 244, 181, 1)',
+  },
+  channelC: {
+    height: '80%',
   },
 });

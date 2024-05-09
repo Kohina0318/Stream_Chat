@@ -19,6 +19,11 @@ export default function UsersScreen() {
             name:'Shubh',
             img:"https://img.freepik.com/premium-vector/business-global-economy_24877-41082.jpg"
         },
+        {
+            id:3,
+            name:'Shubhhhh',
+            img:"https://img.freepik.com/premium-vector/business-global-economy_24877-41082.jpg"
+        },
     ]
   return (
     <FlatList
