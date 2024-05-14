@@ -191,7 +191,7 @@ export default function NavigationScreens() {
               name="ChannelListScreen"
               component={ChannelListScreen}
             />
-            <Stack.Screen name="ChannelScreen" component={ChannelScreen}  />
+            <Stack.Screen name="ChannelScreen" component={ChannelScreen} />
             <Stack.Screen name="ThreadScreen" component={ThreadScreen} />
 
             <Stack.Screen name="Users" component={UsersScreen} />
